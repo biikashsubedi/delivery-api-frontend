@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delivery Time Estimator</title>
+    <style>
+        :root {
+            --primary: #4F46E5;
+            --primary-hover: #4338CA;
+            --bg-color: #F3F4F6;
+            --card-bg: #FFFFFF;
+            --text-main: #1F2937;
+            --text-muted: #6B7280;
+            --border: #E5E7EB;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 40px 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            max-width: 800px;
+            width: 100%;
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--text-main);
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            margin-bottom: 24px;
+        }
+
+        .card-title {
+            margin-top: 0;
+            font-size: 1.1rem;
+            color: var(--text-main);
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 12px;
+            margin-bottom: 20px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            font-size: 0.875rem;
+            font-weight: 500;
+            margin-bottom: 6px;
+            color: var(--text-main);
+        }
+
+        input, select {
+            padding: 10px 12px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+
+        input[readonly] {
+            background-color: #F9FAFB;
+            color: var(--text-muted);
+            cursor: not-allowed;
+        }
+
+        button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: background-color 0.2s;
+            margin-top: 20px;
+        }
+
+        button:hover {
+            background-color: var(--primary-hover);
+        }
+
+        button:disabled {
+            background-color: var(--text-muted);
+            cursor: not-allowed;
+        }
+
+        #resultBox {
+            display: none;
+            text-align: center;
+            background-color: #ECFDF5;
+            border: 1px solid #10B981;
+            color: #065F46;
+            padding: 16px;
+            border-radius: 8px;
+            margin-top: 24px;
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        #errorBox {
+            display: none;
+            text-align: center;
+            background-color: #FEF2F2;
+            border: 1px solid #EF4444;
+            color: #991B1B;
+            padding: 16px;
+            border-radius: 8px;
+            margin-top: 24px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>📦 Delivery Time Estimator</h1>
+
+        <div class="card">
+            <h2 class="card-title">API Configuration</h2>
+            <div class="form-grid">
+                <div class="form-group" style="grid-column: 1 / -1;">
+                    <label>Service URL (Read-Only)</label>
+                    <input type="text" id="apiUrl" value="https://delivery-api-232429281144.us-central1.run.app/predict" readonly>
+                </div>
+                <div class="form-group" style="grid-column: 1 / -1;">
+                    <label>Secret Key (Read-Only)</label>
+                    <input type="text" id="apiKey" value="seneca-aigc-secret-key" readonly>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2 class="card-title">Order Details</h2>
+            <form id="predictionForm">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Driver Age</label>
+                        <input type="number" id="Delivery_person_Age" step="1" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Driver Rating (1-5)</label>
+                        <input type="number" id="Delivery_person_Ratings" step="0.1" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Vehicle Condition (0-2)</label>
+                        <input type="number" id="Vehicle_condition" step="1" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Multiple Deliveries (0-3)</label>
+                        <input type="number" id="multiple_deliveries" step="1" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Distance (km)</label>
+                        <input type="number" id="Distance_km" step="0.1" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Weather</label>
+                        <select id="Weather">
+                            <option value="Sunny">Sunny</option>
+                            <option value="Stormy">Stormy</option>
+                            <option value="Sandstorms">Sandstorms</option>
+                            <option value="Windy">Windy</option>
+                            <option value="Fog">Fog</option>
+                            <option value="Cloudy">Cloudy</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Traffic Density</label>
+                        <select id="Road_traffic_density">
+                            <option value="Low">Low</option>
+                            <option value="Medium">Medium</option>
+                            <option value="High">High</option>
+                            <option value="Jam">Jam</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Type of Order</label>
+                        <select id="Type_of_order">
+                            <option value="Snack">Snack</option>
+                            <option value="Drinks">Drinks</option>
+                            <option value="Buffet">Buffet</option>
+                            <option value="Meal">Meal</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Vehicle Type</label>
+                        <select id="Type_of_vehicle">
+                            <option value="motorcycle">Motorcycle</option>
+                            <option value="scooter">Scooter</option>
+                            <option value="electric_scooter">Electric Scooter</option>
+                            <option value="bicycle">Bicycle</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Festival</label>
+                        <select id="Festival">
+                            <option value="No">No</option>
+                            <option value="Yes">Yes</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>City Type</label>
+                        <select id="City">
+                            <option value="Metropolitian">Metropolitian</option>
+                            <option value="Urban">Urban</option>
+                            <option value="Semi-Urban">Semi-Urban</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button type="button" id="randomizeBtn" style="background-color: var(--text-muted); margin-top: 20px; width: auto; float: right; padding: 8px 16px;">🎲 Fill Random Data</button>
+                <div style="clear: both;"></div>
+
+                <button type="submit" id="submitBtn">Get Delivery Estimate</button>
+            </form>
+
+            <div id="resultBox"></div>
+            <div id="errorBox"></div>
+        </div>
+    </div>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script>
+    const weathers = ["Sunny", "Stormy", "Sandstorms", "Windy", "Fog", "Cloudy"];
+    const traffics = ["Low", "Medium", "High", "Jam"];
+    const orders = ["Snack", "Drinks", "Buffet", "Meal"];
+    const vehicles = ["motorcycle", "scooter", "electric_scooter", "bicycle"];
+    const cities = ["Metropolitian", "Urban", "Semi-Urban"];
+
+    function populateRandomData() {
+        $('#Delivery_person_Age').val(Math.floor(Math.random() * 30) + 20);
+        $('#Delivery_person_Ratings').val((Math.random() * (5 - 3.5) + 3.5).toFixed(1));
+        $('#Vehicle_condition').val(Math.floor(Math.random() * 3));
+        $('#multiple_deliveries').val(Math.floor(Math.random() * 4));
+        $('#Distance_km').val((Math.random() * 19 + 1).toFixed(1));
+        
+        $('#Weather').val(weathers[Math.floor(Math.random() * weathers.length)]);
+        $('#Road_traffic_density').val(traffics[Math.floor(Math.random() * traffics.length)]);
+        $('#Type_of_order').val(orders[Math.floor(Math.random() * orders.length)]);
+        $('#Type_of_vehicle').val(vehicles[Math.floor(Math.random() * vehicles.length)]);
+        $('#City').val(cities[Math.floor(Math.random() * cities.length)]);
+    }
+
+    $(document).ready(function() {
+        populateRandomData();
+
+        $('#randomizeBtn').click(populateRandomData);
+
+        $('#predictionForm').submit(function(e) {
+            e.preventDefault();
+
+            const $btn = $('#submitBtn');
+            $btn.prop('disabled', true).text("Processing...");
+
+            const payload = {
+                "Delivery_person_Age": parseFloat($('#Delivery_person_Age').val()),
+                "Delivery_person_Ratings": parseFloat($('#Delivery_person_Ratings').val()),
+                "Vehicle_condition": parseInt($('#Vehicle_condition').val()),
+                "multiple_deliveries": parseFloat($('#multiple_deliveries').val()),
+                "Distance_km": parseFloat($('#Distance_km').val()),
+                "Weather": $('#Weather').val(),
+                "Road_traffic_density": $('#Road_traffic_density').val(),
+                "Type_of_order": $('#Type_of_order').val(),
+                "Type_of_vehicle": $('#Type_of_vehicle').val(),
+                "Festival": $('#Festival').val(),
+                "City": $('#City').val()
+            };
+
+            $.ajax({
+                url: $('#apiUrl').val(),
+                type: 'POST',
+                contentType: 'application/json',
+                headers: {
+                    'X-API-Key': $('#apiKey').val() // Move header here
+                },
+                data: JSON.stringify(payload),
+                success: function(data) {
+                    $btn.prop('disabled', false).text("Get Delivery Estimate");
+                    $('#resultBox').html(`⏱️ Prediction: ${data.estimated_time_minutes} min`).show();
+                    $('#errorBox').hide();
+                },
+                error: function(xhr, status, error) {
+                    console.error("Status:", status, "Error:", error);
+                    // This will print the actual error if it's a 403 or 401
+                    $('#errorBox').html(`⚠️ API Error: ${xhr.status} - Check Console for details`).show();
+                }
+            });
+        });
+    });
+</script>
+</body>
+</html>
