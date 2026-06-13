@@ -12,9 +12,6 @@ A lightweight, interactive web application designed to predict food delivery tim
 - **Cloud-Connected:** Communicates via REST API with a secure backend.
 - **Responsive:** Optimized for desktop and mobile browsers.
 
-## Project Tags
-`machine-learning` `fastapi` `google-cloud-run` `delivery-prediction` `web-development` `jquery` `capstone-project`
-
 ## API Configuration
 This frontend connects to a secure FastAPI backend.
 - **Endpoint:** `https://delivery-api-232429281144.us-central1.run.app/predict`
